@@ -1,0 +1,36 @@
+{
+  "args": {
+    "exp": "1,2,3,4",
+    "ckpt": "/data/imu-ml-security-project/Pretrained_Models/candi/candi-last.ckpt",
+    "out": "experiments/out/run_difftime",
+    "scratch_dir": "/home/patrick/.cache/discrete_diffusion",
+    "device": "cuda",
+    "n_seqs": 16,
+    "steps": 128,
+    "batch_size": 4,
+    "ratios": "10,20,30,40,60,80",
+    "diff_ratios": "10,20,30,40",
+    "perturb_ratios": "20,40,60,80",
+    "n_targets": 8,
+    "target_frac": 0.2,
+    "frac": 0.2,
+    "seed": 0,
+    "gen_ppl": false,
+    "gold_file": null,
+    "gold_hf": "wikitext:wikitext-2-raw-v1:validation"
+  },
+  "ratios": [
+    0.1,
+    0.2,
+    0.3,
+    0.4,
+    0.6,
+    0.8
+  ],
+  "perturb_ratios": [
+    0.2,
+    0.4,
+    0.6,
+    0.8
+  ]
+}

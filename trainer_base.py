@@ -1,7 +1,6 @@
 import itertools
 import pdb
 from dataclasses import dataclass
-import hydra.utils
 import lightning as L
 import numpy as np
 import torch
@@ -387,6 +386,7 @@ class TrainerBase(L.LightningModule):
             weight_decay=self.config.optim.weight_decay,
         )
 
+        import hydra.utils  # lazy: only training needs hydra; inference/sampling does not
         scheduler = hydra.utils.instantiate(
             self.config.lr_scheduler, optimizer=optimizer
         )
