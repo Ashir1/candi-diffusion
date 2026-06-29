@@ -143,16 +143,18 @@ Ratio ladder `R = {0,20,40,60,80}%` for 1–4; `R\{0} = {20,40,60,80}%` for 5.
 
 ---
 
-## 5. Implementation — **DONE** (run guide: [HOWTO_denoise_vs_difficulty.md](HOWTO_denoise_vs_difficulty.md))
+## 5. Implementation — **DONE** (run guide & file map: [README_experiments.md](README_experiments.md))
 
-Built as standalone modules that **call the existing model methods** (`_continuous_step`, `_discrete_step`, `forward`, `prior_sample`) — `algo.py` and the model are untouched.
+Built as the [`denoise_diff/`](denoise_diff/) package that **calls the existing model methods** (`_continuous_step`, `_discrete_step`, `forward`, `prior_sample`) — `algo.py` and the model are untouched (only `trainer_base.py`'s `hydra.utils` import was made lazy).
 
-- [`difficulty.py`](difficulty.py) — predictive entropy, gold-NLL, accuracy/top-k, rescue & **false-rescue**, reveal-set builders (near/far/left/right/random). Unit-tested.
-- [`denoise_harness.py`](denoise_harness.py) — `trace_sample` (H1: re-implements the non-cached loop with per-step entropy + `clean_mask`-transition logging), `denoiser_probe` (H2: single forward with a constructed reveal set), `perturb_and_continue` (exp 5: replace committed tokens with a wrong token at ratio `r`, continue sampling).
-- [`scripts/run_denoise_entropy_experiment.py`](scripts/run_denoise_entropy_experiment.py) — loads the ckpt (hydra compose + `load_from_checkpoint(strict=False)`, trained-knob overrides), runs exp 1–5, dumps `*.pt` to `experiments/out/<run>/`.
-- [`scripts/analyze_denoise_entropy.py`](scripts/analyze_denoise_entropy.py) — plots + Spearman/Pearson, the **H0 null control**, and the rescue taxonomy into `gen_imgs/denoise/`.
+- [`denoise_diff/metrics.py`](denoise_diff/metrics.py) — predictive entropy, gold-NLL, top-k accuracy, quantile buckets, reveal-set builders (near/far/left/right/random).
+- [`denoise_diff/harness.py`](denoise_diff/harness.py) — `trace_sample` (exp 1/2), `denoiser_probe` (exp 3/4), `gold_reconstruct_trace` (exp 6), `gold_renoise_trace` (exp 7).
+- [`denoise_diff/model.py`](denoise_diff/model.py) — `load_model` (from the ckpt config, omegaconf-only), `load_gold`, `gen_ppl`.
+- [`denoise_diff/plotting.py`](denoise_diff/plotting.py) — shared figure helpers.
+- [`run_experiments.py`](run_experiments.py) — CLI to collect data → `experiments/out/<run>/*.pt`.
+- [`analyze.py`](analyze.py) — CLI to make figures (views: standard / per_ratio / difftime / exp6 / exp7).
 
-Status: `difficulty.py` unit-tested; harness + driver + analysis integration-tested end-to-end against a mock CANDI (shapes, reveal monotonicity, entropy-drops-with-context, all 6 figures). A real run needs the candi env + GPU — start with the smoke run in the HOWTO.
+Exp 5 (out-of-distribution perturbation) was retired in favour of exp 7 (in-distribution re-noise & resample). See the README for the exp↔code↔figure map and the run commands.
 
 ---
 
