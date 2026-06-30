@@ -1,0 +1,29 @@
+\contentsline {section}{\numberline {1}Level 1: High-Level Overview}{2}{section.1}%
+\contentsline {subsection}{\numberline {1.1}DDiT --- Discrete Diffusion Transformer}{2}{subsection.1.1}%
+\contentsline {subsection}{\numberline {1.2}ContDIT --- Continuous + Discrete Diffusion Transformer}{2}{subsection.1.2}%
+\contentsline {section}{\numberline {2}Level 2: DDiT Block Internals}{4}{section.2}%
+\contentsline {subsection}{\numberline {2.1}DDiT Block with adaLN}{5}{subsection.2.1}%
+\contentsline {section}{\numberline {3}Level 2: ContDIT Hybrid Input Construction}{6}{section.3}%
+\contentsline {subsection}{\numberline {3.1}Timestep Conditioning in ContDIT}{6}{subsection.3.1}%
+\contentsline {section}{\numberline {4}Level 3: Full Mathematical Detail}{7}{section.4}%
+\contentsline {subsection}{\numberline {4.1}Embedding Layer}{7}{subsection.4.1}%
+\contentsline {subsubsection}{\numberline {4.1.1}DDiT (dit.py)}{7}{subsubsection.4.1.1}%
+\contentsline {subsubsection}{\numberline {4.1.2}ContDIT (dit\_cont.py)}{7}{subsubsection.4.1.2}%
+\contentsline {subsection}{\numberline {4.2}Timestep Embedder}{7}{subsection.4.2}%
+\contentsline {subsection}{\numberline {4.3}Rotary Position Embeddings (RoPE)}{7}{subsection.4.3}%
+\contentsline {subsection}{\numberline {4.4}Layer Normalization}{7}{subsection.4.4}%
+\contentsline {subsection}{\numberline {4.5}Adaptive Layer Normalization (adaLN)}{8}{subsection.4.5}%
+\contentsline {subsection}{\numberline {4.6}DDiT Block --- Full Math}{8}{subsection.4.6}%
+\contentsline {subsection}{\numberline {4.7}Final Output Layer (DDiTFinalLayer)}{8}{subsection.4.7}%
+\contentsline {section}{\numberline {5}Level 3: ContDIT Full Forward Pass}{9}{section.5}%
+\contentsline {subsection}{\numberline {5.1}Complete Forward Pass Algorithm}{9}{subsection.5.1}%
+\contentsline {section}{\numberline {6}Level 3: Detailed Component Diagrams}{10}{section.6}%
+\contentsline {subsection}{\numberline {6.1}Attention Mechanism Detail}{10}{subsection.6.1}%
+\contentsline {subsection}{\numberline {6.2}MLP Detail}{10}{subsection.6.2}%
+\contentsline {subsection}{\numberline {6.3}Bias-Dropout-Scale Residual Connection}{10}{subsection.6.3}%
+\contentsline {section}{\numberline {7}Summary: DDiT vs ContDIT Comparison}{11}{section.7}%
+\contentsline {section}{\numberline {8}Complete Data Flow: ContDIT End-to-End}{12}{section.8}%
+\contentsline {section}{\numberline {9}Initialization and Implementation Notes}{13}{section.9}%
+\contentsline {subsection}{\numberline {9.1}Zero Initialization Strategy}{13}{subsection.9.1}%
+\contentsline {subsection}{\numberline {9.2}Precision and Numerical Stability}{13}{subsection.9.2}%
+\contentsline {subsection}{\numberline {9.3}Hyperparameters}{13}{subsection.9.3}%
