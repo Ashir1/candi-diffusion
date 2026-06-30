@@ -1,0 +1,18 @@
+{
+  "ckpt": "/home/ec2-user/together/ashir/candi-diffusion/basecheckpoint/candi-last.ckpt",
+  "n_seqs": 8,
+  "steps": 256,
+  "batch_size": 2,
+  "layers": [
+    0,
+    5,
+    11
+  ],
+  "capture_every": 16,
+  "n_groups": 4,
+  "seed": 42,
+  "gold_hf": "wikitext:wikitext-2-raw-v1:validation",
+  "gold_file": null,
+  "device": "cuda",
+  "n_captured": 17
+}
