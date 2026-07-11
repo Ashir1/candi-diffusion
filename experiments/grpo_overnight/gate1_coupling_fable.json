@@ -1,0 +1,43 @@
+{
+  "gate1": {
+    "total": 10584237.0,
+    "disc": -222.83419799804688,
+    "cont": 10584460.0,
+    "shuffled": 10583530.0,
+    "contrast": 707.0,
+    "passed": true
+  },
+  "differentiable_path": {
+    "loss": 9.0,
+    "grad_norm": 24.651528351064638
+  },
+  "coupling_on_real_model": [
+    {
+      "t": 0.2,
+      "n_masked": 52,
+      "n_eval": 52,
+      "coupling_mean": 3930996992.0,
+      "coupling_std": 27862632448.0,
+      "coupling_max": 53104058368.0,
+      "coupling_min": -50515558400.0
+    },
+    {
+      "t": 0.5,
+      "n_masked": 124,
+      "n_eval": 124,
+      "coupling_mean": -1615426.125,
+      "coupling_std": 958795264.0,
+      "coupling_max": 2060499968.0,
+      "coupling_min": -1798289152.0
+    },
+    {
+      "t": 0.8,
+      "n_masked": 209,
+      "n_eval": 200,
+      "coupling_mean": -11.681005477905273,
+      "coupling_std": 86.73155212402344,
+      "coupling_max": 192.94757080078125,
+      "coupling_min": -217.40528869628906
+    }
+  ]
+}
