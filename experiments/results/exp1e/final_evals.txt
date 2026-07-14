@@ -1,0 +1,23 @@
+DONE red_s0 {
+ "pol_red": -1659051.7666363423,
+ "pol_tok": -56.75,
+ "conf_red": -1658698.8359210533,
+ "conf_tok": -53.4375,
+ "l2r_red": -1658527.7346860827,
+ "l2r_tok": -56.8046875,
+ "rnd_red": -1658767.8567919694,
+ "rnd_tok": -55.1611328125
+}
+/home/ec2-user/together/wt_agent_1/algo.py:691: UserWarning: To copy construct from a tensor, it is recommended to use sourceTensor.detach().clone() or sourceTensor.detach().clone().requires_grad_(True), rather than torch.tensor(sourceTensor).
+--
+DONE token_s0 {
+ "pol_red": -1659048.6989218323,
+ "pol_tok": -56.69921875,
+ "conf_red": -1658698.8359210533,
+ "conf_tok": -53.4375,
+ "l2r_red": -1658527.7346860827,
+ "l2r_tok": -56.8046875,
+ "rnd_red": -1658767.8567919694,
+ "rnd_tok": -55.1611328125
+}
+EXP1E COMPLETE Tue Jul 14 07:28:48 UTC 2026
