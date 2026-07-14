@@ -1,0 +1,28 @@
+{
+  "experiment": "stage2_6seed_N200",
+  "config": {"NFE": 32, "N_samples": 200, "seeds": 6, "scorer": "GPT2-large"},
+  "base": {"gen_ppl": 19.80, "std": 48.76},
+  "red_arm": {
+    "seeds": [29.70, 30.11, 25.18, 41.87, 37.29, 39.38],
+    "mean": 33.92, "sem": 2.43
+  },
+  "token_arm": {
+    "seeds": [30.56, 29.33, 33.83, 46.52, 48.14, 45.52],
+    "mean": 38.98, "sem": 3.22
+  },
+  "comparison": {
+    "delta_red_minus_token": -5.06,
+    "paired_t": -2.779,
+    "paired_p": 0.039,
+    "sign_test": "5/6",
+    "bootstrap_CI95": [-8.30, -1.80],
+    "bootstrap_p_red_lt_token": 1.0
+  },
+  "vs_base": {
+    "red_degradation": 14.12,
+    "token_degradation": 19.18,
+    "both_worse_than_base": true
+  },
+  "critical_revision": "The N=32 stage-2 claim ('improves from 32.2 to 26.2') was a sampling artifact. At N=200, base=19.8, both arms degrade. Red is significantly better than token (p=0.039) confirming reward-quality propagation, but the absolute direction reverses.",
+  "timestamp": "2026-07-14"
+}
