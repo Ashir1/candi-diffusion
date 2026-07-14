@@ -1,0 +1,59 @@
+{
+ "sft_red_s0_step200@nfe32_N128": {
+  "gen_ppl": 34.01
+ },
+ "sft_red_s1_step200@nfe32_N128": {
+  "gen_ppl": 38.29
+ },
+ "sft_red_s2_step200@nfe32_N128": {
+  "gen_ppl": 36.38
+ },
+ "sft_token_s0_step200@nfe32_N128": {
+  "gen_ppl": 33.01
+ },
+ "sft_token_s1_step200@nfe32_N128": {
+  "gen_ppl": 33.77
+ },
+ "sft_token_s2_step200@nfe32_N128": {
+  "gen_ppl": 37.34
+ },
+ "sft_red_s0_step400@nfe32_N128": {
+  "gen_ppl": 25.22
+ },
+ "sft_red_s1_step400@nfe32_N128": {
+  "gen_ppl": 26.82
+ },
+ "sft_red_s2_step400@nfe32_N128": {
+  "gen_ppl": 28.59
+ },
+ "sft_token_s0_step400@nfe32_N128": {
+  "gen_ppl": 26.73
+ },
+ "sft_token_s1_step400@nfe32_N128": {
+  "gen_ppl": 30.33
+ },
+ "sft_token_s2_step400@nfe32_N128": {
+  "gen_ppl": 26.05
+ },
+ "sft_red_s0_step600@nfe32_N128": {
+  "gen_ppl": 28.44
+ },
+ "sft_red_s1_step600@nfe32_N128": {
+  "gen_ppl": 28.79
+ },
+ "sft_red_s2_step600@nfe32_N128": {
+  "gen_ppl": 27.49
+ },
+ "sft_token_s0_step600@nfe32_N128": {
+  "gen_ppl": 31.55
+ },
+ "sft_token_s1_step600@nfe32_N128": {
+  "gen_ppl": 29.02
+ },
+ "sft_token_s2_step600@nfe32_N128": {
+  "gen_ppl": 34.96
+ },
+ "base@nfe32_N128": {
+  "gen_ppl": 20.62
+ }
+}
