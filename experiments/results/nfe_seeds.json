@@ -1,0 +1,34 @@
+{
+ "policy_red_s1@nfe8_N100": {
+  "gen_ppl": 174.39094094979086,
+  "n": 100
+ },
+ "policy_red_s1@nfe16_N100": {
+  "gen_ppl": 63.213360213244954,
+  "n": 100
+ },
+ "policy_red_s2@nfe8_N100": {
+  "gen_ppl": 129.92053212598788,
+  "n": 100
+ },
+ "policy_red_s2@nfe16_N100": {
+  "gen_ppl": 49.09526816808964,
+  "n": 100
+ },
+ "policy_token_s1@nfe8_N100": {
+  "gen_ppl": 595.011298113379,
+  "n": 100
+ },
+ "policy_token_s1@nfe16_N100": {
+  "gen_ppl": 307.52646428514487,
+  "n": 100
+ },
+ "policy_token_s2@nfe8_N100": {
+  "gen_ppl": 195.52975248197936,
+  "n": 100
+ },
+ "policy_token_s2@nfe16_N100": {
+  "gen_ppl": 103.61542690439389,
+  "n": 100
+ }
+}
