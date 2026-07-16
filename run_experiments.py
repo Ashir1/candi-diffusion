@@ -130,6 +130,33 @@ def run_exp6(model, gold_tokens, steps, batch_size, seed, out):
     print(f"  saved {out}/exp6_recon.pt  H_traj={tuple(data['H_traj'].shape)}")
 
 
+# --- exp 8: exp 6 in two regimes -- teacher-forced (gold) vs free (model) commits --- #
+def run_exp8(model, tok, gold_tokens, steps, batch_size, seed, do_ppl, out):
+    print(f"[exp8] gold vs free reconstruction on {gold_tokens.size(0)} seqs ...")
+    keys = ("reveal_step", "nll0", "nll_reveal", "top3_reveal", "top5_reveal", "final_tokens")
+    data = {"num_steps": steps}
+    for regime in ("gold", "model"):                          # same seed per batch -> paired reveal times
+        acc = {k: [] for k in keys}; acc["H_traj"] = []
+        done, bi = 0, 0
+        while done < gold_tokens.size(0):
+            b = min(batch_size, gold_tokens.size(0) - done)
+            o = H.gold_reconstruct_trace(model, gold_tokens[done:done + b], num_steps=steps,
+                                         seed=seed + bi, commit=regime)
+            for k in keys:
+                acc[k].append(o[k])
+            acc["H_traj"].append(o["H_traj"]); done += b; bi += 1
+            print(f"  [{regime}] reconstructed {done}/{gold_tokens.size(0)}")
+        entry = {k: torch.cat(v, 0) for k, v in acc.items() if k != "H_traj"}
+        entry["H_traj"] = torch.cat(acc["H_traj"], dim=1)     # (S, N, L)
+        if do_ppl:
+            entry["gen_ppl"] = gen_ppl(model, tok, entry["final_tokens"], model.num_tokens)
+            print(f"  [{regime}] gen-PPL {entry['gen_ppl']:.2f}")
+        data[regime] = entry
+        free()
+    torch.save(data, os.path.join(out, "exp8_free_vs_gold.pt"))
+    print(f"  saved {out}/exp8_free_vs_gold.pt")
+
+
 # --- exp 7: gold reconstruction + re-noise intervention (trajectories) ----- #
 def run_exp7(model, tok, gold_tokens, renoise_ratios, n_seqs, steps, batch_size, frac, seed, do_ppl, out):
     print("[exp7] gold re-noise & resample with trajectories ...")
@@ -179,7 +206,7 @@ def _generate_ref(model, n, steps, batch_size, seed):
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--exp", default="all", help="comma list of {1,2,3,4,6,7} or 'all' (1&2 share a trace)")
+    ap.add_argument("--exp", default="all", help="comma list of {1,2,3,4,6,7,8} or 'all' (1&2 share a trace)")
     ap.add_argument("--ckpt", default="/data/imu-ml-security-project/Pretrained_Models/candi/candi-last.ckpt")
     ap.add_argument("--out", default="experiments/out/run1")
     ap.add_argument("--scratch-dir", default=os.environ.get("SCRATCH_DIR", "/home/patrick/.cache/discrete_diffusion"))
@@ -202,7 +229,7 @@ def main():
     ratios = [int(x) / 100.0 for x in args.ratios.split(",")]
     renoise_ratios = [int(x) / 100.0 for x in args.renoise_ratios.split(",")]
     diff_ratios = [int(x) / 100.0 for x in args.diff_ratios.split(",")] if args.diff_ratios else None
-    exps = ["1", "2", "3", "4", "6", "7"] if args.exp == "all" else args.exp.split(",")
+    exps = ["1", "2", "3", "4", "6", "7", "8"] if args.exp == "all" else args.exp.split(",")
     os.makedirs(args.out, exist_ok=True)
 
     model, tok, cfg = load_model(args.ckpt, args.device, args.scratch_dir, length=1024)
@@ -246,6 +273,13 @@ def main():
                      args.frac, args.seed, args.gen_ppl, args.out)
         except Exception as e:
             print(f"[exp7] skipped: {e}\n       tip: --gold-hf wikitext:wikitext-2-raw-v1:validation")
+        free()
+
+    if "8" in exps:
+        try:
+            run_exp8(model, tok, _gold(), args.steps, args.batch_size, args.seed, args.gen_ppl, args.out)
+        except Exception as e:
+            print(f"[exp8] skipped: {e}\n       tip: --gold-hf wikitext:wikitext-2-raw-v1:validation")
         free()
 
     print("done.")

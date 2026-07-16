@@ -30,6 +30,7 @@ To add an experiment: add a `run_expN` in `run_experiments.py` (using `harness`)
 | 4 | **rescue + accuracy** vs gold (top-1/top-3) | `exp4_rescue.pt` | `standard` → `exp4_rescue_{curves,taxonomy}.png`; `per_ratio`; `difftime` (+ forward) |
 | 6 | **more reveal-time rescues hard tokens** (gold) | `exp6_recon.pt` | `exp6` → `exp6_{rescue,time_vs_rescue}_diff{R}.png` |
 | 7 | **re-noise & resample** importance (gold, in-distribution) | `exp7_renoise.pt` | `exp7` → `exp7_renoise_diff{R}.png` |
+| 8 | exp 6 in **two regimes**: teacher-forced gold vs **free** (model-committed) context | `exp8_free_vs_gold.pt` | `exp8` → `exp8_top{3,5}_diff{R}.png` |
 
 (Exp 5 — out-of-distribution perturbation — was removed; exp 7 is its clean in-distribution successor.)
 
@@ -41,7 +42,7 @@ by that entropy; `difftime` re-buckets by entropy measured at 10/20/30/40 % deno
 Inside the candi env (torch + flash-attn + omegaconf), on a GPU:
 
 ```bash
-# collect data (exp 4/6/7 need gold text; wikitext auto-downloads ~5 MB)
+# collect data (exp 4/6/7/8 need gold text; wikitext auto-downloads ~5 MB)
 python run_experiments.py --exp all --out experiments/out/run_big \
   --n-seqs 64 --steps 256 --batch-size 4 --gold-hf wikitext:wikitext-2-raw-v1:validation --gen-ppl
 
@@ -56,9 +57,16 @@ Run a subset with `--exp 1,2,3` or a single view with `--views exp7`.
 - **Checkpoint** (default in `--ckpt`): `…/candi-last.ckpt` — `model=small`, length 1024, gpt2/OWT.
   Loaded from the config saved *inside* the ckpt (omegaconf only); `_orig_mod` keys dropped, EMA ignored.
 - **`--batch-size` must be ≤ 4** at length 1024 — the soft `(B,L,V)` double-precision tensors OOM at 8 on 24 GB.
-- **Gold sources** (exp 4/6/7): `--gold-hf NAME[:CONFIG[:SPLIT]]`, `--gold-file some.txt`, or OpenWebText
+- **Gold sources** (exp 4/6/7/8): `--gold-hf NAME[:CONFIG[:SPLIT]]`, `--gold-file some.txt`, or OpenWebText
   via `--scratch-dir` (a dir holding `owt/`). Exp 1/2/3 need no data.
-- **`--gen-ppl`** (exp 7) downloads gpt2-large (~3 GB) and computes generative perplexity; without it
-  exp 7 still records entropy/accuracy trajectories.
+- **`--gen-ppl`** (exp 7/8) downloads gpt2-large (~3 GB) and computes generative perplexity; without it
+  exp 7/8 still record entropy/accuracy trajectories.
 - **Resumable**: exp 7 saves after each (ratio, condition) and skips finished ones on restart.
+- **Exp 8** runs `gold_reconstruct_trace` twice per batch with the same seed: `commit='gold'`
+  (teacher forcing, identical to exp 6) and `commit='model'` (commits sampled from the model's
+  own `p_x0`, like the real sampler). Model-token sampling uses a dedicated RNG stream, so both
+  regimes see the **same reveal times and continuous noise** — a paired per-token comparison of
+  gold vs self-generated context. The masked-token continuous channel carries noisy gold in
+  *both* regimes (the §1.2 confound, held constant). With `--gen-ppl` it also records the
+  generative perplexity of each regime's final committed sequence.
 - Design rationale & caveats: [denoise_vs_difficulty_plan.md](denoise_vs_difficulty_plan.md).

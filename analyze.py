@@ -7,6 +7,7 @@ Views (``--views``, default all):
   difftime  -- exp 1/2/3/4 re-bucketed by entropy at --diff-ratios (e.g. 10,20,30,40)
   exp6      -- exp 6 rescue scatter/taxonomy + "more time -> rescue", per --diff-ratios
   exp7      -- exp 7 per bucketing %: entropy + top-3/top-5 over time + gen-PPL
+  exp8      -- exp 8 commit accuracy vs context, gold vs free regimes (top-3 / top-5 figs)
 
   python analyze.py --in experiments/out/run_big --figdir gen_imgs/run_big --diff-ratios 10,20,30,40
 """
@@ -292,6 +293,43 @@ def exp6(indir, figdir, rho):
 
 
 # =========================================================================== #
+# exp8 view (exp6 in two regimes: teacher-forced gold vs free model commits)
+# =========================================================================== #
+def exp8(indir, figdir, rho):
+    d = P.load(indir, "exp8_free_vs_gold.pt")
+    if d is None or "gold" not in d or "model" not in d:
+        return
+    gd, fr = d["gold"], d["model"]
+    H, rs = gd["H_traj"].float(), gd["reveal_step"].long()   # difficulty + tau from the gold regime
+    S, N, L = H.shape
+    if not torch.equal(rs, fr["reveal_step"].long()):
+        print("  [exp8] WARNING: reveal schedules differ across regimes (expected paired)")
+    rps = torch.tensor([(rs < i).float().mean().item() for i in range(S)])
+    s0 = int(torch.argmin((rps - rho).abs())); m = rs > s0
+    if m.sum() < 30:
+        return
+    Dv = H[s0][m]; hard = Dv > Dv.median()
+    ctx = rps[rs[m]]
+    edges = np.linspace(float(ctx.min()), float(ctx.max()), 7); centers = 0.5 * (edges[:-1] + edges[1:])
+    for k in (3, 5):
+        fig, ax = plt.subplots(figsize=(7.5, 5))
+        for regime, rlbl, ls in [(gd, "gold ctx", "-"), (fr, "free ctx", "--")]:
+            acc_m = regime[f"top{k}_reveal"].float()[m]
+            for grp, gm, col in [("hard", hard, P.COLORS["hard"]), ("easy", ~hard, P.COLORS["easy"])]:
+                c, a = ctx[gm].numpy(), acc_m[gm].numpy()
+                ys = [a[(c >= edges[i]) & (c < edges[i + 1] + 1e-6)].mean()
+                      if ((c >= edges[i]) & (c < edges[i + 1] + 1e-6)).sum() else np.nan
+                      for i in range(len(edges) - 1)]
+                ax.plot(centers, ys, ls, color=col, marker="o", label=f"{grp} {rlbl}")
+        ppl = {n: e.get("gen_ppl") for n, e in [("gold", gd), ("free", fr)] if e.get("gen_ppl") is not None}
+        sub = ("\ngen-PPL: " + ", ".join(f"{n}={v:.1f}" for n, v in ppl.items())) if ppl else ""
+        ax.set(title=f"Exp8 @ {int(rho*100)}%: top-{k} commit accuracy, gold vs free context{sub}",
+               xlabel="context revealed when token committed", ylabel=f"top-{k} fraction correct vs gold")
+        ax.legend(fontsize=8)
+        P.save_fig(fig, figdir, f"exp8_top{k}_diff{int(rho*100)}.png")
+
+
+# =========================================================================== #
 # exp7 view (gold re-noise; one figure per bucketing %)
 # =========================================================================== #
 def exp7(indir, figdir):
@@ -334,10 +372,10 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--in", dest="indir", default="experiments/out/run_big")
     ap.add_argument("--figdir", default="gen_imgs/run_big")
-    ap.add_argument("--views", default="all", help="comma list of {standard,per_ratio,difftime,exp6,exp7} or 'all'")
+    ap.add_argument("--views", default="all", help="comma list of {standard,per_ratio,difftime,exp6,exp7,exp8} or 'all'")
     ap.add_argument("--diff-ratios", default="10,20,30,40")
     a = ap.parse_args()
-    views = ["standard", "per_ratio", "difftime", "exp6", "exp7"] if a.views == "all" else a.views.split(",")
+    views = ["standard", "per_ratio", "difftime", "exp6", "exp7", "exp8"] if a.views == "all" else a.views.split(",")
     rhos = [int(x) / 100.0 for x in a.diff_ratios.split(",")]
     if "standard" in views:
         print("[standard]"); standard(a.indir, a.figdir)
@@ -351,6 +389,9 @@ def main():
             print(f"[exp6 {int(rho*100)}%]"); exp6(a.indir, a.figdir, rho)
     if "exp7" in views:
         print("[exp7]"); exp7(a.indir, a.figdir)
+    if "exp8" in views:
+        for rho in rhos:
+            print(f"[exp8 {int(rho*100)}%]"); exp8(a.indir, a.figdir, rho)
     print("done.")
 
 

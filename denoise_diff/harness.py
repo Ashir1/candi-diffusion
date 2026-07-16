@@ -9,7 +9,7 @@ Harnesses
 ---------
 * ``trace_sample``           -- full sampler trajectory (entropy field, reveal steps).  exp 1, exp 2.
 * ``denoiser_probe``         -- one forward with a constructed reveal set.              exp 3, exp 4.
-* ``gold_reconstruct_trace`` -- reconstruct real text along the reveal schedule.        exp 6.
+* ``gold_reconstruct_trace`` -- reconstruct real text along the reveal schedule.        exp 6 (commit='gold'), exp 8 (gold vs model commits).
 * ``gold_renoise_trace``     -- gold reconstruction + re-noise intervention.            exp 7.
 """
 
@@ -146,17 +146,29 @@ def denoiser_probe(model, x_ref, reveal_mask, ratio, gold=None):
 # exp 6 -- rescue along the sampler's stochastic reveal schedule, on real text
 # --------------------------------------------------------------------------- #
 @torch.no_grad()
-def gold_reconstruct_trace(model, gold, num_steps=None, eps=1e-5, seed=None):
-    """Reconstruct real text ``gold`` by running the sampler's random reveal schedule with
-    teacher-forced gold reveals. Each position gets a random reveal time tau; we score the
-    model's prediction (vs gold) at tau, the moment it has accumulated the most context.
+def gold_reconstruct_trace(model, gold, num_steps=None, eps=1e-5, seed=None, commit="gold"):
+    """Reconstruct real text ``gold`` by running the sampler's random reveal schedule.
+    Each position gets a random reveal time tau; we score the model's prediction (vs gold)
+    at tau, the moment it has accumulated the most context.
+
+    commit: what a position is committed to at its reveal time (exp 6 vs exp 8):
+      'gold'  -- teacher forcing: revealed context is always the gold token (exp 6).
+      'model' -- free: commit a sample from the model's own p_x0 (like the real sampler),
+                 so later tokens condition on self-generated (possibly wrong) context.
+    Model-token sampling draws from a dedicated generator, so at the same ``seed`` the
+    global RNG stream (continuous noise + reveal draws) is identical across regimes:
+    every position gets the same tau in both -- a paired comparison. Masked positions
+    carry the noisy-gold continuous channel in BOTH regimes (held constant); only the
+    committed discrete context differs.
 
     Returns CPU tensors:
       H_traj (S,B,L) fp16   -- entropy field (for difficulty-at-rho and early entropy),
       reveal_step (B,L),
       nll0, nll_reveal (B,L)        -- gold-NLL at step 0 vs at reveal time,
-      top3_reveal, top5_reveal (B,L)-- top-k accuracy (vs gold) at reveal time.
+      top3_reveal, top5_reveal (B,L)-- top-k accuracy (vs gold) at reveal time,
+      final_tokens (B,L)            -- committed sequence (== gold when commit='gold').
     """
+    assert commit in ("gold", "model")
     if seed is not None:
         set_seed(seed)
     if num_steps is None:
@@ -169,6 +181,12 @@ def gold_reconstruct_trace(model, gold, num_steps=None, eps=1e-5, seed=None):
     timesteps, cont_noise, _ = _inference_schedule(model, num_steps, eps)
     onehot = F.one_hot(g, V).float()
 
+    comm_val = g.clone()                                      # committed ids (gold until overwritten)
+    commit_gen = None
+    if commit == "model":                                     # own stream: keeps reveal draws paired
+        commit_gen = torch.Generator(device=device)
+        commit_gen.manual_seed(0 if seed is None else seed + 100_003)
+
     revealed = torch.zeros(B, L, device=device)
     reveal_step = torch.full((B, L), -1, dtype=torch.long, device=device)
     nll0 = None
@@ -180,7 +198,8 @@ def gold_reconstruct_trace(model, gold, num_steps=None, eps=1e-5, seed=None):
     for i in range(num_steps):
         t, s, sigma = timesteps[i], timesteps[i + 1], cont_noise[i]
         rm = revealed
-        xt = onehot * rm.unsqueeze(-1) + (1 - rm).unsqueeze(-1) * (onehot + sigma * torch.randn_like(onehot))
+        comm_oh = onehot if commit == "gold" else F.one_hot(comm_val, V).float()
+        xt = comm_oh * rm.unsqueeze(-1) + (1 - rm).unsqueeze(-1) * (onehot + sigma * torch.randn_like(onehot))
         logp = model.forward(xt=xt, discrete_noise=torch.full((B,), float(t), device=device),
                              reveal_mask=rm, continuous_noise=torch.full((B,), float(sigma), device=device)).float()
         H = D.entropy_from_logprobs(logp)
@@ -195,6 +214,9 @@ def gold_reconstruct_trace(model, gold, num_steps=None, eps=1e-5, seed=None):
             nll_rev[newly] = NLL[newly]
             t3_rev[newly] = D.topk_accuracy(logp, g, 3)[newly]
             t5_rev[newly] = D.topk_accuracy(logp, g, 5)[newly]
+            if commit == "model":                             # commit the model's own choice
+                probs = logp[newly].exp()
+                comm_val[newly] = torch.multinomial(probs, 1, generator=commit_gen).squeeze(-1)
             revealed[newly] = 1.0
 
     never = reveal_step < 0                                   # never committed -> use final step
@@ -203,9 +225,13 @@ def gold_reconstruct_trace(model, gold, num_steps=None, eps=1e-5, seed=None):
         nll_rev[never] = NLL[never]
         t3_rev[never] = D.topk_accuracy(logp, g, 3)[never]
         t5_rev[never] = D.topk_accuracy(logp, g, 5)[never]
+        if commit == "model":
+            probs = logp[never].exp()
+            comm_val[never] = torch.multinomial(probs, 1, generator=commit_gen).squeeze(-1)
     return dict(H_traj=torch.stack(H_traj, 0), reveal_step=reveal_step.cpu(),
                 nll0=nll0.cpu(), nll_reveal=nll_rev.cpu(),
-                top3_reveal=t3_rev.cpu(), top5_reveal=t5_rev.cpu(), num_steps=int(num_steps))
+                top3_reveal=t3_rev.cpu(), top5_reveal=t5_rev.cpu(),
+                final_tokens=comm_val.cpu(), num_steps=int(num_steps))
 
 
 # --------------------------------------------------------------------------- #
